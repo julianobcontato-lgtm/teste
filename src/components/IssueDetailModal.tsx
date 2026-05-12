@@ -2,6 +2,7 @@ import React from 'react';
 import { motion } from 'motion/react';
 import { X, MapPin, Clock, User, Shield, AlertCircle, CheckCircle2, Info, ShieldCheck } from 'lucide-react';
 import { Issue } from '../types';
+import { normalizeImageUrl } from '../lib/utils';
 import { formatDistanceToNow } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 
@@ -37,7 +38,7 @@ export default function IssueDetailModal({ issue, onClose }: IssueDetailModalPro
         <div className="relative h-64 overflow-hidden shrink-0 bg-blue-100 flex items-center justify-center">
           {issue.imageUrl ? (
             <img 
-              src={issue.imageUrl} 
+              src={normalizeImageUrl(issue.imageUrl)} 
               alt={issue.title}
               className="w-full h-full object-cover"
               referrerPolicy="no-referrer"
@@ -115,7 +116,7 @@ export default function IssueDetailModal({ issue, onClose }: IssueDetailModalPro
                   <p className="text-[10px] font-extrabold text-blue-500 uppercase tracking-widest bg-blue-100/50 px-3 py-1 rounded-full self-start inline-block">Evidência do Serviço Realizado</p>
                   <div className="relative rounded-3xl overflow-hidden shadow-2xl border-4 border-white aspect-video bg-gray-200">
                     <img 
-                      src={issue.managerPhotoUrl} 
+                      src={normalizeImageUrl(issue.managerPhotoUrl)} 
                       alt="Serviço realizado"
                       className="w-full h-full object-cover"
                       referrerPolicy="no-referrer"

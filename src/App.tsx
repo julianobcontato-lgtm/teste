@@ -22,6 +22,7 @@ import {
 import { onSnapshot, collection, query, orderBy, addDoc, serverTimestamp, setDoc, doc, getDoc, deleteDoc } from 'firebase/firestore';
 import { onAuthStateChanged, signOut } from 'firebase/auth';
 import { auth, db, loginWithGoogle, handleFirestoreError, OperationType, testConnection } from './lib/firebase';
+import { normalizeImageUrl } from './lib/utils';
 import MapView from './components/Map';
 import IssueCard from './components/IssueCard';
 import ReportForm from './components/ReportForm';
@@ -241,22 +242,6 @@ export default function App() {
       await deleteDoc(doc(db, 'reports', id));
     } catch (error) {
       handleFirestoreError(error, OperationType.DELETE, `reports/${id}`);
-    }
-  };
-
-  const normalizeImageUrl = (url: string) => {
-    if (!url) return '';
-    try {
-      const u = new URL(url);
-      if (u.hostname === 'imgur.com') {
-        const id = u.pathname.split('/').pop();
-        if (id && !id.includes('.')) {
-          return `https://i.imgur.com/${id}.png`;
-        }
-      }
-      return url;
-    } catch {
-      return url;
     }
   };
 

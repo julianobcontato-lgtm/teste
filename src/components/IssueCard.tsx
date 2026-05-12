@@ -2,6 +2,7 @@ import { motion } from 'motion/react';
 import React from 'react';
 import { MapPin, Clock, AlertCircle, CheckCircle2, ChevronRight } from 'lucide-react';
 import { Issue } from '../types';
+import { normalizeImageUrl } from '../lib/utils';
 import { formatDistanceToNow } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 
@@ -74,7 +75,7 @@ const IssueCard: React.FC<IssueCardProps> = ({ issue, isAdmin, onClick }) => {
           {issue.managerPhotoUrl && (
             <div className="relative group/manager mt-2">
               <img 
-                src={issue.managerPhotoUrl} 
+                src={normalizeImageUrl(issue.managerPhotoUrl)} 
                 alt="Evidência" 
                 className="w-full h-32 object-cover rounded-lg border border-blue-200" 
                 referrerPolicy="no-referrer"
