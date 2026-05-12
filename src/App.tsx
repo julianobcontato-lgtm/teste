@@ -285,6 +285,24 @@ export default function App() {
     }
   };
 
+  if (isLoading) {
+    return (
+      <div className="min-h-screen bg-[#F8F9FC] flex flex-col items-center justify-center gap-4 text-center p-4">
+        <motion.div 
+          animate={{ scale: [1, 1.1, 1], rotate: [0, 90, 180, 270, 360] }}
+          transition={{ repeat: Infinity, duration: 4, ease: "linear" }}
+          className="w-20 h-20 bg-blue-600 rounded-[2rem] flex items-center justify-center text-white shadow-2xl shadow-blue-200"
+        >
+          <ShieldCheck size={40} />
+        </motion.div>
+        <div className="space-y-1">
+          <h1 className="text-xl font-black text-gray-900 tracking-tight">Olá Prefeitura</h1>
+          <p className="text-gray-400 font-bold uppercase tracking-widest text-[10px] animate-pulse">Iniciando serviços municipais...</p>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-screen bg-[#F8F9FC] text-gray-900 font-sans selection:bg-blue-100 selection:text-blue-900">
       {/* Navigation */}

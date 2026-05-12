@@ -7,7 +7,24 @@
   </head>
   <body>
     <div id="root"></div>
-    <script type="module" src="/src/main.tsx"></script>
+    <script>
+      // Diagnostic to catch blank page errors on production
+      window.addEventListener('error', function(e) {
+        const root = document.getElementById('root');
+        if (root && (root.innerHTML === '' || root.children.length === 0)) {
+          root.innerHTML = '<div style="font-family: sans-serif; padding: 40px; text-align: center; color: #4b5563;">' +
+            '<h1 style="color: #2563eb; font-weight: 800;">Erro de Inicialização</h1>' +
+            '<p style="margin-bottom: 20px;">Não foi possível carregar os módulos do site no GitHub.</p>' +
+            '<div style="background: #f3f4f6; padding: 15px; border-radius: 8px; font-family: monospace; font-size: 12px; text-align: left; overflow: auto;">' +
+            '<strong>Erro:</strong> ' + e.message + '<br>' +
+            '<strong>URL:</strong> ' + window.location.href +
+            '</div>' +
+            '<p style="margin-top: 20px; font-size: 14px;">Certifique-se de que a pasta <strong>dist</strong> está sendo servida corretamente.</p>' +
+            '</div>';
+        }
+      });
+    </script>
+    <script type="module" src="./src/main.tsx"></script>
   </body>
 </html>
 
