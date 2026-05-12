@@ -60,6 +60,11 @@ export default function App() {
 
   useEffect(() => {
     testConnection();
+
+    // Safety timeout to ensure app eventually renders
+    const timer = setTimeout(() => {
+      setIsLoading(false);
+    }, 5000);
     
     // Auth Listener
     const unsubscribeAuth = onAuthStateChanged(auth, async (user) => {
@@ -110,6 +115,7 @@ export default function App() {
         setShowOnboarding(false);
       }
       setIsLoading(false);
+      clearTimeout(timer);
     });
 
     // Firestore Listener
