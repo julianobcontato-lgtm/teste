@@ -1,0 +1,6 @@
+{
+  "name": "Olá Prefeitura - Itapetininga",
+  "description": "Uma plataforma moderna para cidadãos relatarem e acompanharem problemas urbanos em Itapetininga.",
+  "requestFramePermissions": ["geolocation"],
+  "majorCapabilities": []
+}

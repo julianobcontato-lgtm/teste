@@ -1,0 +1,93 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // 0. Default Deny
+    match /{document=**} {
+      allow read, write: if false;
+    }
+
+    // Phase 3: Primitives
+    function isSignedIn() { return request.auth != null; }
+    function isVerified() { return isSignedIn() && request.auth.token.email_verified == true; }
+    function isOwner(userId) { return isSignedIn() && request.auth.uid == userId; }
+    function getRole() { return get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role; }
+    function isAdmin() { 
+      return isSignedIn() && (
+        request.auth.token.email == 'julianob.contato@gmail.com' || 
+        getRole() == 'admin'
+      );
+    }
+    function isEditor() {
+      return isSignedIn() && (getRole() == 'editor' || isAdmin());
+    }
+    function isValidId(id) { return id is string && id.size() <= 128 && id.matches('^[a-zA-Z0-9_\\-]+$'); }
+    function incoming() { return request.resource.data; }
+    function existing() { return resource.data; }
+
+    // Phase 4: Entity Validators
+    function isValidReport(data) {
+      return data.keys().hasAll(['title', 'description', 'category', 'status', 'location', 'userId', 'createdAt', 'updatedAt', 'reporterName', 'isAnonymous']) &&
+             data.keys().size() >= 10 && data.keys().size() <= 18 &&
+             data.title is string && data.title.size() >= 5 && data.title.size() <= 200 &&
+             data.description is string && data.description.size() >= 10 && data.description.size() <= 2000 &&
+             data.category in ['pothole', 'lighting', 'trash', 'water', 'other'] &&
+             data.status in ['pending', 'in-progress', 'resolved'] &&
+             data.location.lat is number && data.location.lng is number &&
+             data.userId == request.auth.uid &&
+             data.isAnonymous is bool &&
+             (data.isAnonymous == true || (data.keys().hasAll(['cpf']) && data.cpf is string && data.cpf.size() == 11)) &&
+             data.reporterName is string && data.reporterName.size() <= 100 &&
+             (!data.keys().hasAll(['actualReporterName']) || data.actualReporterName is string) &&
+             (!data.keys().hasAll(['address']) || (data.address is string && data.address.size() <= 500)) &&
+             (!data.keys().hasAll(['managerComment']) || data.managerComment is string) &&
+             (!data.keys().hasAll(['managerPhotoUrl']) || data.managerPhotoUrl is string) &&
+             (!data.keys().hasAll(['proposedChanges']) || data.proposedChanges is map) &&
+             data.createdAt == request.time &&
+             data.updatedAt == request.time;
+    }
+
+    function isValidUser(data) {
+      return data.keys().hasAll(['displayName', 'email', 'role']) &&
+             data.keys().size() <= 10 &&
+             data.displayName is string && data.displayName.size() <= 100 &&
+             data.email == request.auth.token.email &&
+             data.role in ['citizen', 'editor', 'admin'] &&
+             (!data.keys().hasAll(['cpf']) || (data.cpf is string && data.cpf.size() == 11)) &&
+             (!data.keys().hasAll(['phone']) || (data.phone is string && data.phone.size() >= 8));
+    }
+
+    // Collection Rules
+    match /reports/{reportId} {
+      allow get, list: if true; // Public feed
+      
+      allow create: if isSignedIn() && isValidId(reportId) && isValidReport(incoming());
+      
+      allow update: if isSignedIn() && isValidId(reportId) && (
+        isAdmin() || 
+        // Action: Editor Progress
+        (isEditor() && 
+         incoming().diff(existing()).affectedKeys().hasOnly(['status', 'managerComment', 'managerPhotoUrl', 'updatedAt']) &&
+         incoming().updatedAt == request.time) ||
+        // Action: Citizen Propose Changes
+        (isOwner(existing().userId) && 
+         existing().status != 'resolved' &&
+         incoming().diff(existing()).affectedKeys().hasOnly(['proposedChanges', 'updatedAt']) &&
+         incoming().updatedAt == request.time)
+      );
+
+      allow delete: if isAdmin();
+    }
+
+    match /users/{userId} {
+      allow get: if isOwner(userId) || isEditor();
+      allow create: if isOwner(userId) && isValidUser(incoming());
+      allow update: if (isOwner(userId) || isAdmin()) && 
+                    (
+                      incoming().diff(existing()).affectedKeys().hasOnly(['displayName', 'photoURL', 'updatedAt', 'cpf', 'phone']) ||
+                      (isAdmin() && incoming().diff(existing()).affectedKeys().hasOnly(['role', 'updatedAt']))
+                    ) &&
+                    incoming().updatedAt == request.time &&
+                    isValidUser(incoming());
+    }
+  }
+}
